@@ -1,0 +1,22 @@
+.errorMessage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 12px;
+    font: inherit;
+    color: rgb(156, 145, 145);
+}
+
+.errorMessage::before {
+    content: '';
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 5px;
+
+    background-image: url('../../assets/error.svg');
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+}
