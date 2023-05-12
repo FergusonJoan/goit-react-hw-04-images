@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import Notiflix from 'notiflix';
-
 import galleryApi from '../services/gallery-api';
 
 import Searchbar from './Searchbar/Searchbar';
@@ -18,7 +16,6 @@ export const App = () => {
   const [gallery, setGallery] = useState([]);
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
-  const [loader, setLoader] = useState(false);
   const [showBtn, setShowBtn] = useState(false);
 
   useEffect(() => {
@@ -27,7 +24,7 @@ export const App = () => {
     }
 
     const handleAPI = page => {
-      setLoader(true);
+      setStatus('pending');
 
       galleryApi
         .fetchGallery(page, search)
@@ -44,8 +41,7 @@ export const App = () => {
         .catch(() => {
           setStatus('rejected');
           setMessage('Ooops... something went wrong :(');
-        })
-        .finally(() => setLoader(false));
+        });
     };
     //////////////
     handleAPI(page);

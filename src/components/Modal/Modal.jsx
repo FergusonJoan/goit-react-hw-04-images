@@ -13,19 +13,16 @@ const Modal = ({ closeModal, img }) => {
     }
   };
 
-  useEffect(
-    e => {
-      const handleKeyDown = e => {
-        if (e.code === 'Escape') {
-          closeModal();
-        }
-      };
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.code === 'Escape') {
+        closeModal();
+      }
+    };
 
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    },
-    [closeModal]
-  );
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closeModal]);
   return createPortal(
     <div className={style.overlay} onClick={handleClick}>
       <div className={style.modal}>
