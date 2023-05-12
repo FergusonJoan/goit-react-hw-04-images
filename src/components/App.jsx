@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
+import Notiflix from 'notiflix';
 
 import galleryApi from '../services/gallery-api';
 
@@ -10,121 +11,102 @@ import Loader from './Loader/Loader';
 import Button from './Button/Button';
 import ErrorMessage from './ErrorMessage/ErrorMessage';
 
-export class App extends Component {
-  state = {
-    search: '',
-    message: '',
-    status: 'idle',
-    gallery: [],
-    selected: null,
-    page: 1,
-    loader: false,
-    showBtn: false,
-  };
+export const App = () => {
+  const [search, setSearch] = useState('');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState('idle');
+  const [gallery, setGallery] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loader, setLoader] = useState(false);
+  const [showBtn, setShowBtn] = useState(false);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page, search } = this.state;
-
-    if (prevState.search !== search || prevState.page !== page) {
-      this.handleAPI();
+  useEffect(() => {
+    if (!search) {
+      return;
     }
-  }
 
-  onSubmitForm = state => {
+    const handleAPI = page => {
+      setLoader(true);
+
+      galleryApi
+        .fetchGallery(page, search)
+        .then(data => {
+          if (data.total === 0) {
+            setStatus('rejected');
+            setMessage('Nothing found for your request :(');
+            return;
+          }
+          setGallery(prevState => [...prevState, ...data.hits]);
+          setStatus('resolved');
+          setShowBtn(page < Math.ceil(data.total / 12));
+        })
+        .catch(() => {
+          setStatus('rejected');
+          setMessage('Ooops... something went wrong :(');
+        })
+        .finally(() => setLoader(false));
+    };
+    //////////////
+    handleAPI(page);
+  }, [search, page]);
+  ////////////
+
+  const onSubmitForm = state => {
     if (!state) {
-      return this.setState({
-        status: 'rejected',
-        message: 'string must not be empty',
-      });
+      setStatus('rejected'), setMessage('string must not be empty');
+      return;
     }
-
-    this.setState({
-      search: state,
-      gallery: [],
-      page: 1,
-      showBtn: false,
-    });
+    setSearch(state);
+    setGallery([]);
+    setPage(1);
+    setShowBtn(false);
   };
 
-  onSelected = e => {
+  const onSelected = e => {
     if (e.target.src === undefined) {
       return;
     }
-    this.setState({ selected: { url: e.target.src, alt: e.target.alt } });
+    setSelected({ url: e.target.src, alt: e.target.alt });
   };
 
-  closeModal = () => {
-    this.setState({ selected: null });
+  const closeModal = () => {
+    setSelected(null);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
-    });
+  const handleLoadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  handleAPI = () => {
-    const { search, page } = this.state;
-    this.setState({ loader: true, status: 'pending ' });
+  return (
+    <>
+      <Searchbar onSubmit={onSubmitForm} />
 
-    galleryApi
-      .fetchGallery(page, search)
-      .then(data => {
-        if (data.total === 0) {
-          return this.setState({
-            status: 'rejected',
-            message: 'Nothing found for your request :(',
-          });
-        }
-        return this.setState(prevState => {
-          return {
-            gallery: [...prevState.gallery, ...data.hits],
-            status: 'resolved',
-            showBtn: page < Math.ceil(data.total / 12),
-          };
-        });
-      })
-      .catch(() =>
-        this.setState({
-          status: 'rejected',
-          message: 'Ooops... something went wrong :(',
-        })
-      )
-      .finally(() => this.setState({ loader: false }));
-  };
+      {status === 'pending' && <Loader />}
 
-  render() {
-    const { status, message, gallery, loader, showBtn, selected } = this.state;
-    return (
-      <>
-        <Searchbar onSubmit={this.onSubmitForm} />
+      {status === 'rejected' && <ErrorMessage message={message} />}
 
-        {status === 'pending' && <Loader />}
+      {status === 'resolved' && (
+        <>
+          <ImageGallery onSelected={onSelected}>
+            {gallery !== null &&
+              gallery.map(({ id, largeImageURL, tags }) => (
+                <ImageGalleryItem
+                  key={id}
+                  url={largeImageURL}
+                  tags={tags}
+                  id={id}
+                />
+              ))}
+          </ImageGallery>
 
-        {status === 'rejected' && <ErrorMessage message={message} />}
+          {status === 'resolved' && showBtn && (
+            <Button gallery={gallery} onClick={handleLoadMore} />
+          )}
+        </>
+      )}
 
-        {status === 'resolved' && (
-          <>
-            <ImageGallery onSelected={this.onSelected}>
-              {gallery !== null &&
-                gallery.map(({ id, largeImageURL, tags }) => (
-                  <ImageGalleryItem
-                    key={id}
-                    url={largeImageURL}
-                    tags={tags}
-                    id={id}
-                  />
-                ))}
-            </ImageGallery>
-
-            {status === 'resolved' && showBtn && (
-              <Button gallery={gallery} onClick={this.handleLoadMore} />
-            )}
-          </>
-        )}
-
-        {selected && <Modal img={selected} closeModal={this.closeModal} />}
-      </>
-    );
-  }
-}
+      {selected && <Modal img={selected} closeModal={closeModal} />}
+    </>
+  );
+};

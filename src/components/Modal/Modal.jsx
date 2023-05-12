@@ -1,49 +1,44 @@
-import React, { Component } from "react";
+import { useEffect } from 'react';
+
 import PropTypes from 'prop-types';
 import style from './modal.module.scss';
-import { createPortal } from "react-dom";
+import { createPortal } from 'react-dom';
 
-const modalRoot = document.querySelector('#modal-root')
+const modalRoot = document.querySelector('#modal-root');
 
-class Modal extends Component {
-    componentDidMount() {
-        window.addEventListener('keydown', this.handleKeyDown)
+const Modal = ({ closeModal, img }) => {
+  const handleClick = e => {
+    if (e.currentTarget === e.target) {
+      closeModal();
     }
+  };
 
-    componentWillUnmount() {
-        window.removeEventListener('keydown', this.handleKeyDown);
-    }
-
-    handleKeyDown = (e) => {
-        const { closeModal } = this.props;
-
+  useEffect(
+    e => {
+      const handleKeyDown = e => {
         if (e.code === 'Escape') {
-            closeModal();
+          closeModal();
         }
-    }
+      };
 
-    handleClick = (e) => {
-        const { closeModal } = this.props;
-
-        if (e.currentTarget === e.target) {
-            closeModal();
-        }
-    }
-
-    render() {
-        return createPortal((
-            <div className={style.overlay} onClick={this.handleClick}>
-                <div className={style.modal}>
-                    <img src={this.props.img.url} alt={this.props.img.alt} />
-                </div>
-            </div>
-        ), modalRoot)
-    }
-}
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    },
+    [closeModal]
+  );
+  return createPortal(
+    <div className={style.overlay} onClick={handleClick}>
+      <div className={style.modal}>
+        <img src={img.url} alt={img.alt} />
+      </div>
+    </div>,
+    modalRoot
+  );
+};
 
 Modal.propTypes = {
-    img: PropTypes.object,
-    closeModal: PropTypes.func,
-}
+  img: PropTypes.object,
+  closeModal: PropTypes.func,
+};
 
 export default Modal;
