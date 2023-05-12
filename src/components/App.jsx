@@ -54,7 +54,8 @@ export const App = () => {
 
   const onSubmitForm = state => {
     if (!state) {
-      setStatus('rejected'), setMessage('string must not be empty');
+      setStatus('rejected');
+      setMessage('string must not be empty');
       return;
     }
     setSearch(state);
