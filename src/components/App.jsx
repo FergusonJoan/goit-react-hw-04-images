@@ -43,10 +43,9 @@ export const App = () => {
           setMessage('Ooops... something went wrong :(');
         });
     };
-    //////////////
+
     handleAPI(page);
   }, [search, page]);
-  ////////////
 
   const onSubmitForm = state => {
     if (!state) {
@@ -58,13 +57,6 @@ export const App = () => {
     setGallery([]);
     setPage(1);
     setShowBtn(false);
-  };
-
-  const onSelected = e => {
-    if (e.target.src === undefined) {
-      return;
-    }
-    setSelected({ url: e.target.src, alt: e.target.alt });
   };
 
   const closeModal = () => {
@@ -79,29 +71,28 @@ export const App = () => {
     <>
       <Searchbar onSubmit={onSubmitForm} />
 
-      {status === 'pending' && <Loader />}
-
-      {status === 'rejected' && <ErrorMessage message={message} />}
-
-      {status === 'resolved' && (
-        <>
-          <ImageGallery onSelected={onSelected}>
-            {gallery !== null &&
-              gallery.map(({ id, largeImageURL, tags }) => (
-                <ImageGalleryItem
-                  key={id}
-                  url={largeImageURL}
-                  tags={tags}
-                  id={id}
-                />
-              ))}
-          </ImageGallery>
-
-          {status === 'resolved' && showBtn && (
-            <Button gallery={gallery} onClick={handleLoadMore} />
-          )}
-        </>
+      {gallery.length > 0 && (
+        <ImageGallery>
+          {gallery !== null &&
+            gallery.map(({ id, webformatURL, largeImageURL, tags }) => (
+              <ImageGalleryItem
+                key={id}
+                url={webformatURL}
+                tags={tags}
+                id={id}
+                onImgClick={() =>
+                  setSelected({ url: largeImageURL, alt: tags })
+                }
+              />
+            ))}
+        </ImageGallery>
       )}
+
+      {status === 'resolved' && showBtn && (
+        <Button gallery={gallery} onClick={handleLoadMore} />
+      )}
+      {status === 'rejected' && <ErrorMessage message={message} />}
+      {status === 'pending' && <Loader />}
 
       {selected && <Modal img={selected} closeModal={closeModal} />}
     </>
